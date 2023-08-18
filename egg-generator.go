@@ -30,7 +30,7 @@ func generateEggPosition(currentEggImage *ebiten.Image, active bool, control boo
 func shouldGenerateEgg() bool {
 	eggGenerateFlag := false
 	if rand.Intn(100) < 1 {
-		if rand.Intn(100) < 100 {
+		if rand.Intn(100) < 50 {
 			eggGenerateFlag = true
 		}
 	}

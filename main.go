@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math"
 
@@ -154,10 +153,18 @@ func (g *Game) Update() error {
 	}
 
 	for i := range g.eggs {
+		nomalEggSeFlag := false
 		// fmt.Println(g.eggs[i].X, g.eggs[i].Y, (g.playerX)-(g.eggs[i].X-screenWidth/2), (g.playerY)-(g.eggs[i].Y-screenHeight/2))
 		if !g.eggs[i].collectedStatus && math.Abs((g.playerX)-(g.eggs[i].X-screenWidth/2)) < 60 && math.Abs((g.playerY)-(g.eggs[i].Y-screenHeight/2)) < 60 {
 			g.eggs[i].collectedStatus = true
-			fmt.Println(g.eggs[i].collectedStatus)
+			nomalEggSeFlag = true
+
+			if nomalEggSeFlag {
+				err := playSound("get-nomal-egg-se.wav")
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 		}
 	}
 	// fmt.Println(g.playerX, g.playerY)
