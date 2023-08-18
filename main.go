@@ -154,19 +154,21 @@ func (g *Game) Update() error {
 	}
 
 	for i := range g.eggs {
-		if !g.eggs[i].collectedStatus && math.Abs((g.playerX+52)-g.eggs[i].X) < 50 && math.Abs((g.playerY+52)-(g.eggs[i].Y)) < 50 {
+		// fmt.Println(g.eggs[i].X, g.eggs[i].Y, (g.playerX)-(g.eggs[i].X-screenWidth/2), (g.playerY)-(g.eggs[i].Y-screenHeight/2))
+		if !g.eggs[i].collectedStatus && math.Abs((g.playerX)-(g.eggs[i].X-screenWidth/2)) < 60 && math.Abs((g.playerY)-(g.eggs[i].Y-screenHeight/2)) < 60 {
 			g.eggs[i].collectedStatus = true
 			fmt.Println(g.eggs[i].collectedStatus)
 		}
 	}
+	// fmt.Println(g.playerX, g.playerY)
 
-	// var remainingEggs []Egg
-	// for _, egg := range g.eggs {
-	// 	if !egg.collectedStatus {
-	// 		remainingEggs = append(remainingEggs, egg)
-	// 	}
-	// }
-	// g.eggs = remainingEggs
+	var remainingEggs []Egg
+	for _, egg := range g.eggs {
+		if !egg.collectedStatus {
+			remainingEggs = append(remainingEggs, egg)
+		}
+	}
+	g.eggs = remainingEggs
 
 	return nil
 }
@@ -195,7 +197,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	ebiten.SetFullscreen(true)
+	// ebiten.SetFullscreen(true)
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Displaying Background with Player")
