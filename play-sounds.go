@@ -9,6 +9,15 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
+var isInitialized bool
+
+func initSpeaker(sampleRate beep.SampleRate) {
+	if !isInitialized {
+		speaker.Init(sampleRate, sampleRate.N(time.Second/10))
+		isInitialized = true
+	}
+}
+
 func playSound(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -22,7 +31,7 @@ func playSound(filename string) error {
 	}
 	defer streamer.Close()
 
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	initSpeaker(format.SampleRate) // 初回のみ初期化
 
 	done := make(chan bool)
 	speaker.Play(beep.Seq(streamer, beep.Callback(func() {

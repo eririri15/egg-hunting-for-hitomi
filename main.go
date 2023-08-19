@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"image/color"
 	"log"
 	"math"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -11,7 +14,7 @@ import (
 const (
 	screenWidth       = 450
 	screenHeight      = 800
-	backgroundPath    = "img/test-dot-map.png"
+	backgroundPath    = "img/egg-farm-map-test-1.png"
 	imagePath1        = "img/hitomi-character-dot-1.png"
 	imagePath2        = "img/hitomi-character-dot-2.png"
 	imagePath3        = "img/hitomi-character-dot-3.png"
@@ -26,39 +29,57 @@ const (
 	imageScale2       = 1
 )
 
+var (
+	counterX     = 20 // カウンターのX座標
+	counterY     = 20 // カウンターのY座標
+	gameOverFlag = false
+)
+
 type Game struct {
-	background      *ebiten.Image
-	image1          *ebiten.Image
-	image2          *ebiten.Image
-	image3          *ebiten.Image
-	image4          *ebiten.Image
-	currentImage    *ebiten.Image
-	nomalEggImage   *ebiten.Image
-	rareEggImage1   *ebiten.Image
-	rareEggImage2   *ebiten.Image
-	kimiEggImage    *ebiten.Image
-	currentEggImage *ebiten.Image
-	imageWidth      int
-	imageHeight     int
-	playerX         float64
-	playerY         float64
-	frameCount      int
-	keyPressed      bool
-	addEggPosY      float64
-	eggs            []Egg
-	eggCounter      int
-	eggCount        int
-	isActive        bool
-	canContorol     bool
-	collectedStatus bool
+	background        *ebiten.Image
+	image1            *ebiten.Image
+	image2            *ebiten.Image
+	image3            *ebiten.Image
+	image4            *ebiten.Image
+	currentImage      *ebiten.Image
+	nomalEggImage     *ebiten.Image
+	rareEggImage1     *ebiten.Image
+	rareEggImage2     *ebiten.Image
+	kimiEggImage      *ebiten.Image
+	currentEggImage   *ebiten.Image
+	imageWidth        int
+	imageHeight       int
+	playerX           float64
+	playerY           float64
+	frameCount        int
+	keyPressed        bool
+	addEggPosY        float64
+	eggs              []Egg
+	eggCounter        int
+	eggCount          int
+	isActive          bool
+	canContorol       bool
+	collectedStatus   bool
+	hunterdEggCounter int
+	startTime         time.Time
+	popupImage        *ebiten.Image
 }
 
 func (g *Game) Update() error {
-	if ebiten.IsKeyPressed(ebiten.KeyW) ||
-		ebiten.IsKeyPressed(ebiten.KeyS) ||
-		ebiten.IsKeyPressed(ebiten.KeyA) ||
-		ebiten.IsKeyPressed(ebiten.KeyD) {
-		g.keyPressed = true
+
+	if !gameOverFlag {
+		if ebiten.IsKeyPressed(ebiten.KeyW) ||
+			ebiten.IsKeyPressed(ebiten.KeyS) ||
+			ebiten.IsKeyPressed(ebiten.KeyA) ||
+			ebiten.IsKeyPressed(ebiten.KeyD) ||
+			ebiten.IsKeyPressed(ebiten.KeyDown) ||
+			ebiten.IsKeyPressed(ebiten.KeyUp) ||
+			ebiten.IsKeyPressed(ebiten.KeyRight) ||
+			ebiten.IsKeyPressed(ebiten.KeyLeft) {
+			g.keyPressed = true
+		} else {
+			g.keyPressed = false
+		}
 	} else {
 		g.keyPressed = false
 	}
@@ -82,16 +103,16 @@ func (g *Game) Update() error {
 	}
 
 	if g.keyPressed {
-		if ebiten.IsKeyPressed(ebiten.KeyW) {
+		if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyUp) {
 			g.playerY -= playerSpeed
 		}
-		if ebiten.IsKeyPressed(ebiten.KeyS) {
+		if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyDown) {
 			g.playerY += playerSpeed
 		}
-		if ebiten.IsKeyPressed(ebiten.KeyA) {
+		if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyLeft) {
 			g.playerX -= playerSpeed
 		}
-		if ebiten.IsKeyPressed(ebiten.KeyD) {
+		if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyRight) {
 			g.playerX += playerSpeed
 		}
 	}
@@ -153,18 +174,34 @@ func (g *Game) Update() error {
 	}
 
 	for i := range g.eggs {
-		nomalEggSeFlag := false
 		// fmt.Println(g.eggs[i].X, g.eggs[i].Y, (g.playerX)-(g.eggs[i].X-screenWidth/2), (g.playerY)-(g.eggs[i].Y-screenHeight/2))
-		if !g.eggs[i].collectedStatus && math.Abs((g.playerX)-(g.eggs[i].X-screenWidth/2)) < 60 && math.Abs((g.playerY)-(g.eggs[i].Y-screenHeight/2)) < 60 {
+		if !g.eggs[i].collectedStatus && math.Abs((g.playerX)-(g.eggs[i].X-screenWidth/2)) < 30 && math.Abs((g.playerY)-(g.eggs[i].Y-screenHeight/2)) < 60 {
 			g.eggs[i].collectedStatus = true
-			nomalEggSeFlag = true
+			// scaledFinishingFlag := false
 
-			if nomalEggSeFlag {
+			if g.eggs[i].controlStatus {
+				g.hunterdEggCounter += 5
+
+				err := playSound("get-rare-egg-se.wav")
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else if g.eggs[i].Eggtype == g.kimiEggImage {
+				g.hunterdEggCounter -= 3
+				err := playSound("get-kimi-egg-se.wav")
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				g.hunterdEggCounter += 1
 				err := playSound("get-nomal-egg-se.wav")
 				if err != nil {
 					log.Fatal(err)
 				}
 			}
+
+			// g.eggs = append(g.eggs[:i], g.eggs[i+1:]...)
+
 		}
 	}
 	// fmt.Println(g.playerX, g.playerY)
@@ -177,25 +214,49 @@ func (g *Game) Update() error {
 	}
 	g.eggs = remainingEggs
 
+	if time.Since(g.startTime) >= 30*time.Second {
+		// 操作を強制終了
+		gameOverFlag = true
+
+		g.popupImage = ebiten.NewImage(screenWidth/2, screenHeight/2)
+		g.popupImage.Fill(color.Black)
+	}
+
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-g.playerX/imageScale2, -g.playerY/imageScale2)
-	screen.DrawImage(g.background, op)
 
-	for _, egg := range g.eggs {
-		op3 := &ebiten.DrawImageOptions{}
-		op3.GeoM.Scale(imageScale*0.7, imageScale*0.7)
-		op3.GeoM.Translate(-g.playerX+egg.X, -g.playerY+egg.Y+g.addEggPosY)
-		screen.DrawImage(egg.Eggtype, op3)
+	if !gameOverFlag {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(-g.playerX/imageScale2, -g.playerY/imageScale2)
+		screen.DrawImage(g.background, op)
+
+		for _, egg := range g.eggs {
+			op3 := &ebiten.DrawImageOptions{}
+			op3.GeoM.Scale(imageScale*0.7, imageScale*0.7)
+			op3.GeoM.Translate(-g.playerX+egg.X, -g.playerY+egg.Y+g.addEggPosY)
+			screen.DrawImage(egg.Eggtype, op3)
+		}
+
+		op2 := &ebiten.DrawImageOptions{}
+		op2.GeoM.Scale(imageScale, imageScale)
+		op2.GeoM.Translate(screenWidth/2-52, screenHeight/2-52)
+		screen.DrawImage(g.currentImage, op2)
+
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("SHIROMI POINT: %d", g.hunterdEggCounter), counterX, counterY)
+	} else {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(-g.playerX/imageScale2, -g.playerY/imageScale2)
+		screen.DrawImage(g.background, op)
+
+		op2 := &ebiten.DrawImageOptions{}
+		op2.GeoM.Scale(2, 1)
+		op2.GeoM.Translate(0, screenHeight/4)
+		screen.DrawImage(g.popupImage, op2)
+
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Score: %d", g.hunterdEggCounter), counterX+screenWidth/3+25, counterY+screenHeight/3+52)
 	}
-
-	op2 := &ebiten.DrawImageOptions{}
-	op2.GeoM.Scale(imageScale, imageScale)
-	op2.GeoM.Translate(screenWidth/2-52, screenHeight/2-52)
-	screen.DrawImage(g.currentImage, op2)
 
 }
 
@@ -204,7 +265,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	// ebiten.SetFullscreen(true)
+	ebiten.SetFullscreen(true)
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Displaying Background with Player")
@@ -269,9 +330,9 @@ func main() {
 		currentEggImage: egg1,
 		imageWidth:      img1.Bounds().Dx(),
 		imageHeight:     img1.Bounds().Dy(),
+		startTime:       time.Now(),
+		popupImage:      ebiten.NewImage(screenWidth, screenHeight),
 	}
-
-	// fmt.Printf("Background image size: %dx%d\n", bgImg.Bounds().Dx(), bgImg.Bounds().Dy())
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)

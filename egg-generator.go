@@ -17,7 +17,7 @@ type Egg struct {
 
 func generateEggPosition(currentEggImage *ebiten.Image, active bool, control bool, collect bool) Egg {
 	egg := Egg{
-		X:               rand.Float64() * float64(2048),
+		X:               rand.Float64() * float64(1024),
 		Y:               rand.Float64() * float64(1024),
 		Eggtype:         currentEggImage,
 		activeStatus:    active,
@@ -29,7 +29,7 @@ func generateEggPosition(currentEggImage *ebiten.Image, active bool, control boo
 
 func shouldGenerateEgg() bool {
 	eggGenerateFlag := false
-	if rand.Intn(100) < 1 {
+	if !gameOverFlag && rand.Intn(100) < 1 {
 		if rand.Intn(100) < 50 {
 			eggGenerateFlag = true
 		}
