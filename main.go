@@ -175,7 +175,7 @@ func (g *Game) Update() error {
 
 	for i := range g.eggs {
 		// fmt.Println(g.eggs[i].X, g.eggs[i].Y, (g.playerX)-(g.eggs[i].X-screenWidth/2), (g.playerY)-(g.eggs[i].Y-screenHeight/2))
-		if !g.eggs[i].collectedStatus && math.Abs((g.playerX)-(g.eggs[i].X-screenWidth/2)) < 30 && math.Abs((g.playerY)-(g.eggs[i].Y-screenHeight/2)) < 60 {
+		if !g.eggs[i].collectedStatus && math.Abs((g.playerX)-(g.eggs[i].X-screenWidth/2)) < 40 && math.Abs((g.playerY)-(g.eggs[i].Y-screenHeight/2)) < 80 {
 			g.eggs[i].collectedStatus = true
 			// scaledFinishingFlag := false
 
@@ -255,7 +255,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op2.GeoM.Translate(0, screenHeight/4)
 		screen.DrawImage(g.popupImage, op2)
 
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Score: %d", g.hunterdEggCounter), counterX+screenWidth/3+25, counterY+screenHeight/3+52)
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("SCORE: %d", g.hunterdEggCounter), counterX+screenWidth/3+25, counterY+screenHeight/3+52)
 	}
 
 }
